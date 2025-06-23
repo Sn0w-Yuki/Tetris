@@ -1,498 +1,222 @@
-using TMPro;
-using Unity.VisualScripting;
-using UnityEditor.Localization.Plugins.XLIFF.V12;
+using System;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class BlockPosController : MonoBehaviour
 {
-    public int[][] blPos;
-    private TetrisManager tetrisManager;
-    private float ColumnLength; //縦
-    private float RowLength;    //横
-    private float Depth;
-    private int nowX;
-    private int nowY;
-    private int nowZ;
-    private float xPos;
-    private float yPos;
+    public TetrisManager tetrisManager;
+    public GameObject[] Cube;
+    private int width = 0;
+    private int height = 0;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public int[,] blPos;
+    private GameObject[] nowBlock;
+    private float Timer = 0;
+
+    public enum BlockType { T, J, L, Z, S, I, O }
+
+    public class BlockShape
     {
-        if (tetrisManager == null)
-        {
-            tetrisManager = GetComponent<TetrisManager>();
-            if (tetrisManager == null)
-            {
-                Debug.Log("No TetrisManager");
-            }
-        }
-        RowLength = tetrisManager.rLimit - 1;
-        ColumnLength = tetrisManager.floorLimit;
-
-        for (int y = 0; y < RowLength; y++)
-        {
-            for (int x = 0; x < ColumnLength; x++)
-            {
-                blPos[y][x] = 0;
-            }
-        }
+        public Vector2Int[][] Offsets; // [rotation][tileIndex]
     }
 
-    // Update is called once per frame
+    public BlockShape[] blockShapes;
+
+    // 現在のブロック情報
+    private BlockType currentBlockType;
+    private int currentRoll;
+    private Vector3 spawnPos;
+    private int currentX;
+    private int currentY;
+    private Vector3 boardOffset;
+
+    private void Start()
+    {
+        width = tetrisManager.fieldWidth;
+        height = tetrisManager.fieldHeight;
+        blPos = new int[height, width];
+        boardOffset = new Vector3(-width / 2f, 0, 0); // 中央揃え
+        spawnPos = new Vector3(width / 2, height - 1, 0);
+
+        InitBlockShapes();
+        SpawnNewBlock();
+    }
+
+
     void Update()
     {
-        if (tetrisManager.isChange)
+        Timer += Time.deltaTime;
+        if (Timer >= 1f)
         {
-            //ブロック生成
-        }
-
-        if (!tetrisManager.isPause)
-        {
-            //ここで2の場所把握
-
-            BlockMove();
-
-            //左右移動処理
+            DropBlock();
+            Timer = 0f;
         }
     }
 
-    /// <summary>
-    /// 盤面を配列で管理
-    /// 回転とブロックから配列を参照し、ブロックが移動できるかを確認
-    /// </summary>
-    void BlockMove()
+    void InitBlockShapes()
     {
-        int roll = tetrisManager.nowRoll;
-        int block = tetrisManager.nowBlock;
+        blockShapes = new BlockShape[7];
 
-        switch (roll)
+        blockShapes[(int)BlockType.T] = new BlockShape
         {
-            case 0:
-                switch (block)
-                {
-                    case 0:
-                        CheckBlockMove(block, roll, 0);
-                        //1と2を一個下にずらす
-                        break;
-                    case 1:
-                        break;
-                    case 2:
-                        break;
-                    case 3:
-                        break;
-                    case 4:
-                        break;
-                    case 5:
-                        break;
-                    case 6:
-                        break;
-                    default:
-                        Debug.Log("nowBlockの値を見直して");
-                        break;
-                }
-                break;
-            case 1:
-                switch (tetrisManager.nowBlock)
-                {
-                    case 0:
-                        break;
-                    case 1:
-                        break;
-                    case 2:
-                        break;
-                    case 3:
-                        break;
-                    case 4:
-                        break;
-                    case 5:
-                        break;
-                    case 6:
-                        break;
-                    default:
-                        Debug.Log("nowBlockの値を見直して");
-                        break;
-                }
-                break;
-            case 2:
-                switch (tetrisManager.nowBlock)
-                {
-                    case 0:
-                        break;
-                    case 1:
-                        break;
-                    case 2:
-                        break;
-                    case 3:
-                        break;
-                    case 4:
-                        break;
-                    case 5:
-                        break;
-                    case 6:
-                        break;
-                    default:
-                        Debug.Log("nowBlockの値を見直して");
-                        break;
-                }
-                break;
-            case 3:
-                switch (tetrisManager.nowBlock)
-                {
-                    case 0:
-                        break;
-                    case 1:
-                        break;
-                    case 2:
-                        break;
-                    case 3:
-                        break;
-                    case 4:
-                        break;
-                    case 5:
-                        break;
-                    case 6:
-                        break;
-                    default:
-                        Debug.Log("nowBlockの値を見直して");
-                        break;
-                }
-                break;
-            default:
-                Debug.Log("存在しない回転です");
-                break;
-        }
-    }
-
-    void SearchCenter()
-    {
-        for (int y = 0; y < RowLength; y++)
-        {
-            for (int x = 0; x < ColumnLength; x++)
+            Offsets = new Vector2Int[][]
             {
-                if (blPos[y][x] == 2)
-                {
-                    nowX = x;
-                    nowY = y;
+                new Vector2Int[] { new(0, 0), new(1, 0), new(2, 0), new(1, -1) },
+                new Vector2Int[] { new(0, 0), new(1, 0), new(1, 1), new(2, 0) },
+                new Vector2Int[] { new(0, 0), new(-1, 0), new(-2, 0), new(-1, -1) },
+                new Vector2Int[] { new(0, 0), new(0, -1), new(-1, -1), new(0, -2) },
+            }
+        };
 
-                }
+        blockShapes[(int)BlockType.J] = new BlockShape
+        {
+            Offsets = new Vector2Int[][]
+            {
+                new Vector2Int[] {new(0,0), new(1,0),new(2,0),new(2,-1)},
+                new Vector2Int[] {new(0,0), new(0,1), new(0,2), new(1,2)},
+                new Vector2Int[] {new(0,0), new(-1,0), new(-2,0), new(-2,1)},
+                new Vector2Int[] {new(0,0), new(0,-1), new(0,-2), new(-1,-2)},
+            }
+        };
+
+        blockShapes[(int)BlockType.L] = new BlockShape
+        {
+            Offsets = new Vector2Int[][]
+            {
+                new Vector2Int[] {new(0,0), new(-1,0),new(-2,0),new(-2,-1)},
+                new Vector2Int[] {new(0,0), new(0,-1), new(0,-2), new(1,-2)},
+                new Vector2Int[] {new(0,0), new(1,0), new(2,0), new(2,1)},
+                new Vector2Int[] {new(0,0), new(0,1), new(0,2), new(-1,2)},
+            }
+        };
+
+        blockShapes[(int)BlockType.Z] = new BlockShape
+        {
+            Offsets = new Vector2Int[][]
+            {
+                new Vector2Int[] {new(0,0), new(1,0),new(1,-1),new(2,-1)},
+                new Vector2Int[] {new(0,0), new(0,-1), new(-1,-1), new(-1,-2)},
+            }
+        };
+
+        blockShapes[(int)BlockType.S] = new BlockShape
+        {
+            Offsets = new Vector2Int[][]
+            {
+                new Vector2Int[] {new(0,0), new(-1,0),new(-1,-1),new(-2,-1)},
+                new Vector2Int[] {new(0,0), new(0,-1), new(1,-1), new(1,-2)},
+            }
+        };
+
+        blockShapes[(int)BlockType.I] = new BlockShape
+        {
+            Offsets = new Vector2Int[][]
+            {
+                new Vector2Int[] {new(0,0), new(0,-1),new(0,-2),new(0,-3)},
+                new Vector2Int[] {new(0,0), new(-1,0), new(-2,0), new(-3,0)},
+            }
+        };
+
+        blockShapes[(int)BlockType.O] = new BlockShape
+        {
+            Offsets = new Vector2Int[][]
+            {
+                new Vector2Int[] {new(0,0), new(1,0),new(0,-1),new(1,-1)},
+            }
+        };
+    }
+
+    public bool CanPlaceBlock(BlockType block, int roll, int x, int y)
+    {
+        foreach (var offset in blockShapes[(int)block].Offsets[roll])
+        {
+            int nx = x + offset.x;
+            int ny = y + offset.y;
+
+            if (nx < 0 || nx >= width || ny >= height) return false; // xは範囲外禁止、yが下にはみ出し禁止
+            if (ny >= 0 && blPos[ny, nx] != 0) return false; // y >= 0 の範囲で重なり判定
+        }
+        return true;
+    }
+
+
+    public void PlaceBlock(BlockType block, int roll, int x, int y)
+    {
+        ClearCurrentBlock();
+        nowBlock = new GameObject[4];
+
+        for (int i = 0; i < 4; i++)
+        {
+            Vector2Int offset = blockShapes[(int)block].Offsets[roll][i];
+            int nx = x + offset.x;
+            int ny = y + offset.y;
+            if (InBounds(nx, ny))
+            {
+                blPos[ny, nx] = 1;
+            }
+            nowBlock[i] = Instantiate(Cube[(int)block], new Vector3(nx, ny, 0) + boardOffset, Quaternion.identity);
+            nowBlock[i].tag = "currentBlock";
+        }
+    }
+
+    public void ClearBlock(BlockType block, int roll, int x, int y)
+    {
+        foreach (var offset in blockShapes[(int)block].Offsets[roll])
+        {
+            int nx = x + offset.x;
+            int ny = y + offset.y;
+            if (InBounds(nx, ny))
+            {
+                blPos[ny, nx] = 0;
             }
         }
-        Debug.Log("(" + nowX + "," + nowY + "," + nowZ + ")");
     }
 
-    /// <summary>
-    /// ブロックの左右、下の動きを管理
-    /// </summary>
-    /// <param name="block">現在のブロックの種類</param>
-    /// <param name="roll">現在の回転回数</param>
-    /// <param name="Pos">配列内の場所</param>
-    /// <param name="dir">移動方向 0:下,1:右,2:左</param>
-    void CheckBlockMove(int block, int roll, int dir)
+    bool InBounds(int x, int y)
     {
-        SearchCenter();
-        int x = nowX;
-        int y = nowY;
-        int z = nowZ;
+        return x >= 0 && x < width && y >= 0 && y < height;
+    }
 
-        switch (dir)
+    public void DropBlock()
+    {
+        ClearBlock(currentBlockType, currentRoll, currentX, currentY);
+
+        if (CanPlaceBlock(currentBlockType, currentRoll, currentX, currentY - 1))
         {
-            // 下方向
-            case 0:
-                switch (block)
-                {
-                    case 0: // Tブロック
-                        switch (roll)
-                        {
-                            case 0:
-                                if (blPos[y + 1][x] == 0 && blPos[y + 2][x + 1] == 0 && blPos[y + 1][x + 2] == 0)
-                                {
-                                    blPos[y][x] = 0;
-                                    blPos[y][x + 1] = 0;
-                                    blPos[y][x + 2] = 0;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y + 1][x + 2] = 1;
-                                    blPos[y + 2][x + 1] = 1;
-                                }
-                                break;
-                            case 1:
-                                if (blPos[y + 1][x] == 0 && blPos[y][x + 1] == 0)
-                                {
-                                    blPos[y - 2][x] = 0;
-                                    blPos[y - 1][x + 1] = 0;
-                                    blPos[y][x] = 1;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y][x + 1] = 1;
-                                }
-                                break;
-                            case 2:
-                                if (blPos[y + 1][x - 2] == 0 && blPos[y + 1][x - 1] == 0 && blPos[y + 1][x] == 0)
-                                {
-                                    blPos[y][x - 2] = 0;
-                                    blPos[y - 1][x - 1] = 0;
-                                    blPos[y][x] = 0;
-                                    blPos[y + 1][x - 2] = 1;
-                                    blPos[y + 1][x - 1] = 1;
-                                    blPos[y + 1][x] = 2;
-                                }
-                                break;
-                            default:
-                                if (blPos[y + 2][x - 1] == 0 && blPos[y + 3][x] == 0)
-                                {
-                                    blPos[y + 1][x - 1] = 0;
-                                    blPos[y][x] = 0;
-                                    blPos[y + 2][x - 1] = 1;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y + 3][x] = 1;
-                                }
-                                break;
-                        }
-                        break;
-
-                    case 1: // Jブロック
-                        switch (roll)
-                        {
-                            case 0:
-                                if (blPos[y + 1][x] == 0 && blPos[y + 1][x + 1] == 0 && blPos[y + 2][x + 2] == 0)
-                                {
-                                    blPos[y][x] = 0;
-                                    blPos[y][x + 1] = 0;
-                                    blPos[y][x + 2] = 0;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y + 1][x + 1] = 1;
-                                    blPos[y + 2][x + 2] = 1;
-                                }
-                                break;
-                            case 1:
-                                if (blPos[y + 1][x] == 0 && blPos[y - 1][x + 1] == 0)
-                                {
-                                    blPos[y - 2][x] = 0;
-                                    blPos[y - 2][x + 1] = 0;
-                                    blPos[y - 1][x + 1] = 1;
-                                    blPos[y][x] = 1;
-                                    blPos[y + 1][x] = 2;
-                                }
-                                break;
-                            case 2:
-                                if (blPos[y + 1][x - 2] == 0 && blPos[y + 1][x - 1] == 0 && blPos[y + 1][x] == 0)
-                                {
-                                    blPos[y - 1][x - 2] = 0;
-                                    blPos[y][x - 2] = 0;
-                                    blPos[y][x] = 0;
-                                    blPos[y + 1][x - 2] = 1;
-                                    blPos[y + 1][x - 1] = 1;
-                                    blPos[y + 1][x] = 2;
-                                }
-                                break;
-                            default:
-                                if (blPos[y + 3][x - 1] == 0 && blPos[y + 3][x] == 0)
-                                {
-                                    blPos[y][x] = 0;
-                                    blPos[y + 2][x - 1] = 0;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y + 3][x - 1] = 1;
-                                    blPos[y + 3][x] = 1;
-                                }
-                                break;
-                        }
-                        break;
-                    case 2: // Lブロック
-                        switch (roll)
-                        {
-                            case 0:
-                                if (blPos[y + 2][x - 2] == 0 && blPos[y + 1][x - 1] == 0 && blPos[y + 1][x] == 0)
-                                {
-                                    blPos[y][x - 2] = 0;
-                                    blPos[y][x - 1] = 0;
-                                    blPos[y][x] = 0;
-                                    blPos[y + 2][x - 2] = 1;
-                                    blPos[y + 1][x - 1] = 1;
-                                    blPos[y + 1][x] = 2;
-                                }
-                                break;
-                            case 1:
-                                if (blPos[y + 3][x] == 0 && blPos[y + 3][x + 1] == 0)
-                                {
-                                    blPos[y][x] = 0;
-                                    blPos[y + 2][x + 1] = 0;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y + 3][x] = 1;
-                                    blPos[y + 3][x + 1] = 1;
-                                }
-                                break;
-                            case 2:
-                                if (blPos[y + 1][x] == 0 && blPos[y + 1][x + 1] == 0 && blPos[y + 1][x + 2] == 0)
-                                {
-                                    blPos[y - 1][x + 2] = 0;
-                                    blPos[y][x] = 0;
-                                    blPos[y][x + 1] = 0;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y + 1][x + 1] = 1;
-                                    blPos[y + 1][x + 2] = 1;
-                                }
-                                break;
-                            default:
-                                if (blPos[y - 1][x - 1] == 0 && blPos[y + 1][x] == 0)
-                                {
-                                    blPos[y - 2][x - 1] = 0;
-                                    blPos[y - 2][x] = 0;
-                                    blPos[y - 1][x - 1] = 1;
-                                    blPos[y][x] = 1;
-                                    blPos[y + 1][x] = 2;
-                                }
-                                break;
-                        }
-                        break;
-
-                    case 3: // Zブロック
-                        switch (roll)
-                        {
-                            case 0:
-                                if (blPos[y + 1][x] == 0 && blPos[y + 2][x + 1] == 0)
-                                {
-                                    blPos[y][x] = 0;
-                                    blPos[y][x + 1] = 0;
-                                    blPos[y + 1][x + 2] = 0;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y + 2][x + 1] = 1;
-                                    blPos[y + 2][x + 2] = 1;
-                                }
-                                break;
-                            case 1:
-                                if (blPos[y + 3][x - 1] == 0 && blPos[y + 2][x] == 0)
-                                {
-                                    blPos[y][x] = 0;
-                                    blPos[y + 1][x - 1] = 0;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y + 2][x] = 1;
-                                    blPos[y + 3][x - 1] = 2;
-                                }
-                                break;
-                        }
-                        break;
-
-                    case 4: // Sブロック
-                        switch (roll)
-                        {
-                            case 0:
-                                if (blPos[y + 2][x - 2] == 0 && blPos[y + 2][x - 1] == 0 && blPos[y + 1][x] == 0)
-                                {
-                                    blPos[y][x - 1] = 0;
-                                    blPos[y][x] = 0;
-                                    blPos[y + 1][x - 2] = 0;
-                                    blPos[y + 2][x - 2] = 2;
-                                    blPos[y + 2][x - 1] = 1;
-                                    blPos[y + 1][x] = 0;
-                                }
-                                break;
-                            case 1:
-                                if (blPos[y + 2][x] == 0 && blPos[y + 3][x + 1] == 0)
-                                {
-                                    blPos[y][x] = 0;
-                                    blPos[y + 1][x + 1] = 0;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y + 2][x] = 1;
-                                    blPos[y + 3][x + 1] = 1;
-                                }
-                                break;
-                        }
-                        break;
-
-                    case 5: // Iブロック
-                        switch (roll)
-                        {
-                            case 0:
-                                if (blPos[y + 4][x] == 0)
-                                {
-                                    blPos[y][x] = 0;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y + 4][x] = 1;
-                                }
-                                break;
-                            case 1:
-                                if (blPos[y + 1][x - 3] == 0 && blPos[y + 1][x - 2] == 0 && blPos[y + 1][x - 1] == 0 && blPos[y + 1][x] == 0)
-                                {
-                                    blPos[y][x - 3] = 0;
-                                    blPos[y][x - 2] = 0;
-                                    blPos[y][x - 1] = 0;
-                                    blPos[y][x] = 0;
-                                    blPos[y + 1][x - 3] = 1;
-                                    blPos[y + 1][x - 2] = 1;
-                                    blPos[y + 1][x - 1] = 1;
-                                    blPos[y + 1][x] = 2;
-                                }
-                                break;
-                        }
-                        break;
-
-                    case 6: // Oブロック
-                        switch (roll)
-                        {
-                            case 0:
-                                if (blPos[y + 2][x] == 0 && blPos[y + 2][x + 1] == 0)
-                                {
-                                    blPos[y][x] = 0;
-                                    blPos[y][x + 1] = 0;
-                                    blPos[y + 2][x] = 2;
-                                    blPos[y + 2][x + 1] = 1;
-                                }
-                                break;
-                            case 1:
-                                if (blPos[y + 1][x] == 0 && blPos[y + 2][x + 1] == 0 && blPos[y + 2][x + 2] == 0 && blPos[y + 1][x + 3] == 0)
-                                {
-                                    blPos[y][x] = 0;
-                                    blPos[y + 1][x + 1] = 0;
-                                    blPos[y + 1][x + 2] = 0;
-                                    blPos[y][x + 3] = 0;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y + 2][x + 1] = 1;
-                                    blPos[y + 2][x + 2] = 1;
-                                    blPos[y + 1][x + 3] = 1;
-                                }
-                                break;
-                            case 2:
-                                if (blPos[y + 1][x] == 0 && blPos[y + 1][x + 1] == 0 && blPos[y + 1][x + 2] == 0 && blPos[y + 1][x + 3] == 0)
-                                {
-                                    blPos[y][x] = 0;
-                                    blPos[y][x + 1] = 0;
-                                    blPos[y][x + 2] = 0;
-                                    blPos[y][x + 3] = 0;
-                                    blPos[y + 1][x] = 1;
-                                    blPos[y + 1][x + 1] = 1;
-                                    blPos[y + 1][x + 2] = 1;
-                                    blPos[y + 1][x + 3] = 2;
-                                }
-                                break;
-                            case 3:
-                                if (blPos[y + 1][x] == 0 && blPos[y][x + 1] == 0 && blPos[y][x + 2] == 0 && blPos[y + 1][x + 3] == 0)
-                                {
-                                    blPos[y][x] = 0;
-                                    blPos[y - 1][x + 1] = 0;
-                                    blPos[y - 1][x + 2] = 0;
-                                    blPos[y][x + 3] = 0;
-                                    blPos[y + 1][x] = 2;
-                                    blPos[y][x + 1] = 1;
-                                    blPos[y][x + 2] = 1;
-                                    blPos[y + 1][x + 3] = 1;
-                                }
-                                break;
-                        }
-                        break;
-
-                }
-                break;
-
-            // 右方向
-            case 1:
-
-                break;
-
-            // 左方向
-            case 2:
-
-                break;
+            currentY -= 1;
+            PlaceBlock(currentBlockType, currentRoll, currentX, currentY);
+        }
+        else
+        {
+            PlaceBlock(currentBlockType, currentRoll, currentX, currentY); // 固定
+            SpawnNewBlock(); // 次のブロック
         }
     }
 
+    void SpawnNewBlock()
+    {
+        ClearCurrentBlock();
+        currentBlockType = (BlockType)UnityEngine.Random.Range(0, 7);
+        currentRoll = 0;
+        currentX = (int)spawnPos.x;
+        currentY = (int)spawnPos.y;
+        Debug.Log(currentX + "," + currentY);
+
+        if (!CanPlaceBlock(currentBlockType, currentRoll, currentX, currentY))
+        {
+            Debug.Log("Game Over!");
+            enabled = false;
+            return;
+        }
+
+        PlaceBlock(currentBlockType, currentRoll, currentX, currentY);
+    }
+
+    public void ClearCurrentBlock()
+    {
+        GameObject[] oldBlocks = GameObject.FindGameObjectsWithTag("currentBlock");
+        foreach (GameObject obj in oldBlocks)
+        {
+            Destroy(obj);
+        }
+    }
 }
