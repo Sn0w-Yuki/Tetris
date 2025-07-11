@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class BlockPosController : MonoBehaviour
 {
-    public TetrisManager tetrisManager;
+
     public GameObject[] Cube;
     private int width = 0;
     private int height = 0;
@@ -11,6 +11,7 @@ public class BlockPosController : MonoBehaviour
     public int[,] blPos;
     private GameObject[] nowBlock;
     private float Timer = 0;
+    private TetrisManager tetrisManager;
 
     public enum BlockType { T, J, L, Z, S, I, O }
 
@@ -71,10 +72,10 @@ public class BlockPosController : MonoBehaviour
         {
             Offsets = new Vector2Int[][]
             {
-                new Vector2Int[] {new(0,0), new(1,0),new(2,0),new(2,-1)},
-                new Vector2Int[] {new(0,0), new(0,1), new(0,2), new(1,2)},
-                new Vector2Int[] {new(0,0), new(-1,0), new(-2,0), new(-2,1)},
-                new Vector2Int[] {new(0,0), new(0,-1), new(0,-2), new(-1,-2)},
+                new Vector2Int[] {new(0, 0), new(1, 0), new(2, 0), new(2, -1)},
+                new Vector2Int[] {new(0, 0), new(0, 1), new(0, 2), new(1, 2)},
+                new Vector2Int[] {new(0, 0), new(-1, 0), new(-2, 0), new(-2, 1)},
+                new Vector2Int[] {new(0, 0), new(0, -1), new(0, -2), new(-1, -2)},
             }
         };
 
@@ -82,10 +83,10 @@ public class BlockPosController : MonoBehaviour
         {
             Offsets = new Vector2Int[][]
             {
-                new Vector2Int[] {new(0,0), new(-1,0),new(-2,0),new(-2,-1)},
-                new Vector2Int[] {new(0,0), new(0,-1), new(0,-2), new(1,-2)},
-                new Vector2Int[] {new(0,0), new(1,0), new(2,0), new(2,1)},
-                new Vector2Int[] {new(0,0), new(0,1), new(0,2), new(-1,2)},
+                new Vector2Int[] {new(0, 0), new(-1, 0), new(-2, 0), new(-2, -1)},
+                new Vector2Int[] {new(0, 0), new(0, -1), new(0, -2), new(1, -2)},
+                new Vector2Int[] {new(0, 0), new(1, 0), new(2, 0), new(2, 1)},
+                new Vector2Int[] {new(0, 0), new(0, 1), new(0, 2), new(-1, 2)},
             }
         };
 
@@ -93,8 +94,8 @@ public class BlockPosController : MonoBehaviour
         {
             Offsets = new Vector2Int[][]
             {
-                new Vector2Int[] {new(0,0), new(1,0),new(1,-1),new(2,-1)},
-                new Vector2Int[] {new(0,0), new(0,-1), new(-1,-1), new(-1,-2)},
+                new Vector2Int[] {new(0, 0), new(1, 0),new(1, -1),new(2, -1)},
+                new Vector2Int[] {new(0, 0), new(0, -1), new(-1, -1), new(-1, -2)},
             }
         };
 
@@ -102,8 +103,8 @@ public class BlockPosController : MonoBehaviour
         {
             Offsets = new Vector2Int[][]
             {
-                new Vector2Int[] {new(0,0), new(-1,0),new(-1,-1),new(-2,-1)},
-                new Vector2Int[] {new(0,0), new(0,-1), new(1,-1), new(1,-2)},
+                new Vector2Int[] {new(0, 0), new(-1, 0),new(-1, -1),new(-2, -1)},
+                new Vector2Int[] {new(0, 0), new(0, -1), new(1, -1), new(1, -2)},
             }
         };
 
@@ -111,8 +112,8 @@ public class BlockPosController : MonoBehaviour
         {
             Offsets = new Vector2Int[][]
             {
-                new Vector2Int[] {new(0,0), new(0,-1),new(0,-2),new(0,-3)},
-                new Vector2Int[] {new(0,0), new(-1,0), new(-2,0), new(-3,0)},
+                new Vector2Int[] {new(0, 0), new(0, -1),new(0, -2),new(0, -3)},
+                new Vector2Int[] {new(0, 0), new(-1, 0), new(-2, 0), new(-3, 0)},
             }
         };
 
@@ -120,7 +121,7 @@ public class BlockPosController : MonoBehaviour
         {
             Offsets = new Vector2Int[][]
             {
-                new Vector2Int[] {new(0,0), new(1,0),new(0,-1),new(1,-1)},
+                new Vector2Int[] {new(0, 0), new(1, 0),new(0, -1),new(1, -1)},
             }
         };
     }
