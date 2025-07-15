@@ -5,6 +5,7 @@ public class TetrisManager : MonoBehaviour
 {
     [Header("flag")]
     public bool isPause = false;
+    public bool isTest = false;
 
     [Header("Width & Height")]
     public int fieldWidth = 10;
@@ -33,10 +34,14 @@ public class TetrisManager : MonoBehaviour
         cam = GameObject.FindGameObjectWithTag("MainCamera");
 
         CenterPos = new Vector3(fieldWidth / 2, fieldHeight / 2, fieldDepth / 2);
-        Instantiate(TestCube, CenterPos, Quaternion.identity);
-        Instantiate(TestCube, new Vector3(CenterPos.x, CenterPos.y + 1, CenterPos.z), Quaternion.identity);
-        Instantiate(TestCube, new Vector3(CenterPos.x + 1, CenterPos.y + 1, CenterPos.z), Quaternion.identity);
-        Instantiate(TestCube, new Vector3(CenterPos.x + 2, CenterPos.y + 1, CenterPos.z), Quaternion.identity);
+
+        if (isTest)
+        {
+            Instantiate(TestCube, CenterPos, Quaternion.identity);
+            Instantiate(TestCube, new Vector3(CenterPos.x, CenterPos.y + 1, CenterPos.z), Quaternion.identity);
+            Instantiate(TestCube, new Vector3(CenterPos.x + 1, CenterPos.y + 1, CenterPos.z), Quaternion.identity);
+            Instantiate(TestCube, new Vector3(CenterPos.x + 2, CenterPos.y + 1, CenterPos.z), Quaternion.identity);
+        }
 
         cameraPos = new Vector3[5];
         cameraPos[0] = new Vector3(CenterPos.x, CenterPos.y - 1, CenterPos.z - cameraDistance);
