@@ -1,184 +1,137 @@
-using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class BlockPosController : MonoBehaviour
 {
-    public GameObject[] Cube;
-    private int width, height, depth;
+    [SerializeField] private GameObject[] Cube;
+    [SerializeField] private Material LockedCube;
 
-    public int[,,] blPos;
-    private GameObject[] nowBlock;
-    private float Timer = 0f;
-    private TetrisManager tetrisManager;
-
-    public enum BlockType { T, J, L, Z, S, I, O }
-
-    public class BlockShape
-    {
-        public Vector3Int[][] Offsets; // [rotation][tileIndex]
-    }
-
-    public BlockShape[] blockShapes;
-
-    private BlockType currentBlockType;
-    private int currentRoll;
+    private float width, height, depth;
+    [SerializeField] private float spawnDiff = 2f;
+    private int[,,] blockPos;
     private Vector3 spawnPos;
-    private int currentX, currentY, currentZ;
-    private Vector3 boardOffset;
+    public int nowBlock = 0;
+    public int nowRoll = 0;
+    [SerializeField] private TetrisManager tetrisManager;
+    private GameObject centerBlock;
+    private GameObject[] arroundBlock;
 
-    private void Start()
+    void Start()
     {
-        tetrisManager = GetComponent<TetrisManager>();
+        InitialSetting();
 
-        width = tetrisManager.fieldWidth;
-        height = tetrisManager.fieldHeight;
-        depth = tetrisManager.fieldDepth;
 
-        blPos = new int[height, width, depth];
-        boardOffset = new Vector3(-width / 2f, 0, -depth / 2f);
-        spawnPos = new Vector3(width / 2, height - 1, depth / 2);
 
-        InitBlockShapes();
-        SpawnNewBlock();
+
+        SpawnBlock(nowBlock);
     }
 
     void Update()
     {
-        Timer += Time.deltaTime;
-        if (Timer >= 1f)
+
+    }
+
+    void InitialSetting()
+    {
+        width = tetrisManager.fieldWidth;
+        height = tetrisManager.fieldHeight;
+        depth = tetrisManager.fieldDepth;
+        spawnPos = new Vector3(width / 2, height - 1, depth / 2);
+        arroundBlock = new GameObject[3];
+
+        blockPos = new int[(int)width, (int)height, (int)depth];
+
+        nowBlock = Random.Range(0, 6);
+    }
+
+    void SpawnBlock(int blockNum)
+    {
+        Vector3 centerOffset = new Vector3(0, 0, 0);
+        Vector3[] arroundOffset = new Vector3[3];
+        switch (blockNum)
         {
-            DropBlock();
-            Timer = 0f;
+            case 0:
+                centerOffset = Vector3.zero;
+                arroundOffset = new Vector3[]{
+                    new Vector3(1, 0, 0),
+                    new Vector3(2, 0, 0),
+                    new Vector3(1, -1, 0),
+                };
+                break;
+            case 1:
+                centerOffset = Vector3.zero;
+                arroundOffset = new Vector3[]{
+                    new Vector3(1, 0, 0),
+                    new Vector3(2, 0, 0),
+                    new Vector3(2, -1, 0),
+                };
+                break;
+            case 2:
+                centerOffset = new Vector3(2, 0, 0);
+                arroundOffset = new Vector3[]{
+                    new Vector3(0, 0, 0),
+                    new Vector3(1, 0, 0),
+                    new Vector3(0, -1, 0),
+                };
+                break;
+            case 3:
+                centerOffset = Vector3.zero;
+                arroundOffset = new Vector3[]{
+                    new Vector3(1, 0, 0),
+                    new Vector3(1, -1, 0),
+                    new Vector3(2, -1, 0),
+                };
+                break;
+            case 4:
+                centerOffset = new Vector3(2, 0, 0);
+                arroundOffset = new Vector3[]{
+                    new Vector3(1, 0, 0),
+                    new Vector3(0, -1, 0),
+                    new Vector3(1, -1, 0),
+                };
+                break;
+            case 5:
+                centerOffset = Vector3.zero;
+                arroundOffset = new Vector3[]{
+                    new Vector3(0, -1, 0),
+                    new Vector3(0, -2, 0),
+                    new Vector3(0, -3, 0),
+                };
+                break;
+            case 6:
+                centerOffset = Vector3.zero;
+                arroundOffset = new Vector3[]{
+                    new Vector3(1, 0, 0),
+                    new Vector3(0, -1, 0),
+                    new Vector3(1, -1, 0),
+                };
+                break;
+            default:
+                break;
+        }
+
+        centerBlock = Instantiate(Cube[blockNum], spawnPos + centerOffset, Quaternion.identity);
+        for (int i = 0; i < 3; i++)
+        {
+            arroundBlock[i] = Instantiate(Cube[blockNum], spawnPos + arroundOffset[i], Quaternion.identity);
         }
     }
 
-    void InitBlockShapes()
+    void LockBlock()
     {
-        blockShapes = new BlockShape[7];
-
-        blockShapes[(int)BlockType.T] = new BlockShape
+        for (int z = 0; z < depth; z++)
         {
-            Offsets = new Vector3Int[][]
+            for (int y = 0; y < height; y++)
             {
-                new Vector3Int[] { new(0, 0, 0), new(1, 0, 0), new(2, 0, 0), new(1, -1, 0) },
-                new Vector3Int[] { new(0, 0, 0), new(0, -1, 0), new(0, -2, 0), new(1, -1, 0) },
-                new Vector3Int[] { new(0, 0, 0), new(-1, 0, 0), new(-2, 0, 0), new(-1, -1, 0) },
-                new Vector3Int[] { new(0, 0, 0), new(0, 1, 0), new(0, 2, 0), new(-1, 1, 0) }
-            }
-        };
-
-        // 他ブロックも同様に定義（必要に応じてZ軸方向の形も追加可）
-
-        blockShapes[(int)BlockType.O] = new BlockShape
-        {
-            Offsets = new Vector3Int[][]
-            {
-                new Vector3Int[] { new(0, 0, 0), new(1, 0, 0), new(0, -1, 0), new(1, -1, 0) }
-            }
-        };
-
-        // ※他のブロック（J, L, Z, S, I）も同様に Vector3Int で定義してください
-    }
-
-    public bool CanPlaceBlock(BlockType block, int roll, int x, int y, int z)
-    {
-        foreach (var offset in blockShapes[(int)block].Offsets[roll])
-        {
-            int nx = x + offset.x;
-            int ny = y + offset.y;
-            int nz = z + offset.z;
-
-            if (!InBounds(nx, ny, nz)) return false;
-            if (ny >= 0 && blPos[ny, nx, nz] != 0) return false;
-        }
-        return true;
-    }
-
-    public void PlaceBlock(BlockType block, int roll, int x, int y, int z)
-    {
-        ClearCurrentBlock();
-        nowBlock = new GameObject[4];
-
-        for (int i = 0; i < 4; i++)
-        {
-            Vector3Int offset = blockShapes[(int)block].Offsets[roll][i];
-            int nx = x + offset.x;
-            int ny = y + offset.y;
-            int nz = z + offset.z;
-
-            if (InBounds(nx, ny, nz))
-            {
-                blPos[ny, nx, nz] = 1;
-            }
-
-            nowBlock[i] = Instantiate(Cube[(int)block], new Vector3(nx, ny, nz) + boardOffset, Quaternion.identity);
-            nowBlock[i].tag = "currentBlock";
-        }
-    }
-
-    public void ClearBlock(BlockType block, int roll, int x, int y, int z)
-    {
-        foreach (var offset in blockShapes[(int)block].Offsets[roll])
-        {
-            int nx = x + offset.x;
-            int ny = y + offset.y;
-            int nz = z + offset.z;
-
-            if (InBounds(nx, ny, nz))
-            {
-                blPos[ny, nx, nz] = 0;
+                for (int x = 0; x < width; x++)
+                {
+                    if (blockPos[x, y, z] > 0 && blockPos[x, y, z] < 10)
+                    {
+                        Instantiate(Cube[nowBlock % 10], new Vector3(x, y, z), Quaternion.identity);
+                    }
+                }
             }
         }
     }
 
-    public void DropBlock()
-    {
-        ClearBlock(currentBlockType, currentRoll, currentX, currentY, currentZ);
-
-        if (CanPlaceBlock(currentBlockType, currentRoll, currentX, currentY - 1, currentZ))
-        {
-            currentY -= 1;
-            PlaceBlock(currentBlockType, currentRoll, currentX, currentY, currentZ);
-        }
-        else
-        {
-            PlaceBlock(currentBlockType, currentRoll, currentX, currentY, currentZ); // 固定
-            SpawnNewBlock();
-        }
-    }
-
-    void SpawnNewBlock()
-    {
-        ClearCurrentBlock();
-        currentBlockType = (BlockType)UnityEngine.Random.Range(0, 7);
-        currentRoll = 0;
-        currentX = (int)spawnPos.x;
-        currentY = (int)spawnPos.y;
-        currentZ = (int)spawnPos.z;
-
-        if (!CanPlaceBlock(currentBlockType, currentRoll, currentX, currentY, currentZ))
-        {
-            Debug.Log("Game Over!");
-            enabled = false;
-            return;
-        }
-
-        PlaceBlock(currentBlockType, currentRoll, currentX, currentY, currentZ);
-    }
-
-    public void ClearCurrentBlock()
-    {
-        GameObject[] oldBlocks = GameObject.FindGameObjectsWithTag("currentBlock");
-        foreach (GameObject obj in oldBlocks)
-        {
-            Destroy(obj);
-        }
-    }
-
-    bool InBounds(int x, int y, int z)
-    {
-        return x >= 0 && x < width &&
-               y >= 0 && y < height &&
-               z >= 0 && z < depth;
-    }
 }

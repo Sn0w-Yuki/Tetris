@@ -18,10 +18,6 @@ public class TetrisManager : MonoBehaviour
     [SerializeField] private GameObject StageCube;
     [SerializeField] private GameObject TestCube;
 
-    [Header("Block Information")]
-    public int nowBlock = 0;
-    public int nowRoll = 0;
-
     private Vector3[] cameraPos;
     private int[] cameraRotate = { 0, -90, 180, 90 };
     private Vector3[] UpperRotate;
@@ -60,7 +56,7 @@ public class TetrisManager : MonoBehaviour
         GenerateStage();
         SetLight(CenterPos);
 
-        nowBlock = Random.Range(0, 7);
+
     }
 
     void Update()
@@ -145,9 +141,9 @@ public class TetrisManager : MonoBehaviour
         stage.transform.parent = this.transform;
 
         //床の生成
-        for (int x = -1; x < fieldWidth + 2; x++)
+        for (int x = -1; x < fieldWidth + 1; x++)
         {
-            for (int z = -1; z < fieldDepth + 2; z++)
+            for (int z = -1; z < fieldDepth + 1; z++)
             {
                 Vector3 Pos = new Vector3(x, stageHeight, z);
                 GameObject obj = Instantiate(StageCube, Pos, Quaternion.identity);
@@ -156,11 +152,11 @@ public class TetrisManager : MonoBehaviour
         }
 
         //柱の生成
-        for (int x = -1; x <= fieldWidth + 2; x += fieldWidth + 2)
+        for (int x = -1; x <= fieldWidth + 1; x += fieldWidth + 1)
         {
             for (int y = 0; y < fieldHeight; y++)
             {
-                for (int z = -1; z <= fieldDepth + 2; z += fieldDepth + 2)
+                for (int z = -1; z <= fieldDepth + 1; z += fieldDepth + 1)
                 {
                     Vector3 Pos = new Vector3(x, y, z);
                     GameObject obj = Instantiate(StageCube, Pos, Quaternion.identity);
