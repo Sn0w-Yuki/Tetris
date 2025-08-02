@@ -173,6 +173,8 @@ MonoBehaviour:
   - {fileID: 3125932721587116773, guid: 24a265ce66430496a9f58a783e01035e, type: 3}
   LockedCube: {fileID: 2100000, guid: da869f671282741ab8cee5b9e4c02a0d, type: 2}
   spawnDiff: 2
+  nowBlock: 0
+  nowRoll: 0
   tetrisManager: {fileID: 530466709}
 --- !u!1 &330585543
 GameObject:
@@ -500,69 +502,6 @@ MonoBehaviour:
   cameraDistance: 25
   StageCube: {fileID: 6447384382495354194, guid: 260552dffe138491785630aa977310f6, type: 3}
   TestCube: {fileID: 7264772284226526049, guid: 4ae601baba77e416fb51a0586e2c3de3, type: 3}
-  nowBlock: 0
-  nowRoll: 0
---- !u!1001 &762269259
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 6447384382495354194, guid: 260552dffe138491785630aa977310f6, type: 3}
-      propertyPath: m_Name
-      value: StageCube
-      objectReference: {fileID: 0}
-    - target: {fileID: 6447384382495354194, guid: 260552dffe138491785630aa977310f6, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7450747868028085895, guid: 260552dffe138491785630aa977310f6, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7450747868028085895, guid: 260552dffe138491785630aa977310f6, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7450747868028085895, guid: 260552dffe138491785630aa977310f6, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7450747868028085895, guid: 260552dffe138491785630aa977310f6, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7450747868028085895, guid: 260552dffe138491785630aa977310f6, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7450747868028085895, guid: 260552dffe138491785630aa977310f6, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7450747868028085895, guid: 260552dffe138491785630aa977310f6, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7450747868028085895, guid: 260552dffe138491785630aa977310f6, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7450747868028085895, guid: 260552dffe138491785630aa977310f6, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7450747868028085895, guid: 260552dffe138491785630aa977310f6, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 260552dffe138491785630aa977310f6, type: 3}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -617,4 +556,3 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 530466708}
-  - {fileID: 762269259}

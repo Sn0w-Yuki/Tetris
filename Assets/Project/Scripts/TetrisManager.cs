@@ -11,7 +11,7 @@ public class TetrisManager : MonoBehaviour
     public int fieldWidth = 10;
     public int fieldHeight = 20;
     public int fieldDepth = 10;
-    public int stageHeight = -1;
+    public int floorHeight = -1;
     [Header("Position")]
     public Vector3 CenterPos;
     [SerializeField] private int cameraDistance = 25;
@@ -145,7 +145,7 @@ public class TetrisManager : MonoBehaviour
         {
             for (int z = -1; z < fieldDepth + 1; z++)
             {
-                Vector3 Pos = new Vector3(x, stageHeight, z);
+                Vector3 Pos = new Vector3(x, floorHeight, z);
                 GameObject obj = Instantiate(StageCube, Pos, Quaternion.identity);
                 obj.transform.parent = stage.transform;
             }
