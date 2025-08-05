@@ -1,3 +1,5 @@
+using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class BlockPosController : MonoBehaviour
@@ -11,6 +13,7 @@ public class BlockPosController : MonoBehaviour
     private GameObject[] Block = new GameObject[4];
     private Vector3Int[] spawnOffset;
     private Vector3Int[] dropOffset;
+    private Vector3Int[] moveOffset;
     private int[,,] posArray;
     private int score = 0, level = 0, totalDelete = 0;
 
@@ -35,6 +38,23 @@ public class BlockPosController : MonoBehaviour
                 SpawnBlock(nowBlock);
             }
             time = 0;
+        }
+
+        if (Input.GetKeyDown(KeyCode.W))    //奥へ
+        {
+            MoveBlock("front", nowBlock, nowRoll);
+        }
+        if (Input.GetKeyDown(KeyCode.A))    //左
+        {
+            MoveBlock("left", nowBlock, nowRoll);
+        }
+        if (Input.GetKeyDown(KeyCode.S))    //手前
+        {
+            MoveBlock("back", nowBlock, nowRoll);
+        }
+        if (Input.GetKeyDown(KeyCode.D))    //右
+        {
+            MoveBlock("right", nowBlock, nowRoll);
         }
     }
 
@@ -357,6 +377,7 @@ public class BlockPosController : MonoBehaviour
             }
         }
 
+        CheckLine();
 
         nowBlock = Random.Range(0, 6);
     }
@@ -393,7 +414,153 @@ public class BlockPosController : MonoBehaviour
         }
 
         AddScore(deleteCount);
+    }
 
+    void MoveBlock(string dir, int blockNum, int blockRoll)
+    {
+        int checkCount = 0, clearCount = 0;
+        Vector3Int center = getCenterPos();
+        Vector3Int[] _blockPos = new Vector3Int[4];
+        switch (dir)
+        {
+            case "front":   //奥
+                checkCount = 4;
+                _blockPos = new Vector3Int[checkCount];
+
+                for (int z = center.z + checkCount; z >= center.z + checkCount; z--)
+                {
+                    for (int y = center.y - checkCount; y <= center.y + checkCount; y++)
+                    {
+                        for (int x = center.x - checkCount; x <= center.y + checkCount; x++)
+                        {
+                            if (checkInBound(x, y, z) && (posArray[x, y, z] == 1 || posArray[x, y, z] == 2) && posArray[x, y, z + 1] == 0)
+                            {
+                                _blockPos[clearCount] = new Vector3Int(x, y, z);
+                                clearCount++;
+                            }
+                        }
+                    }
+                }
+                break;
+
+            case "back":    //手前
+                checkCount = 4;
+                _blockPos = new Vector3Int[checkCount];
+
+                for (int z = center.z - checkCount; z <= center.z + checkCount; z++)
+                {
+                    for (int y = center.y - checkCount; y <= center.y + checkCount; y++)
+                    {
+                        for (int x = center.x - checkCount; x <= center.y + checkCount; x++)
+                        {
+                            if ((posArray[x, y, z] == 1 || posArray[x, y, z] == 2) && posArray[x, y, z + 1] == 0 && checkInBound(x, y, z))
+                            {
+                                _blockPos[clearCount] = new Vector3Int(x, y, z);
+                                clearCount++;
+                            }
+                        }
+                    }
+                }
+                break;
+
+            case "left":
+                checkCount = blockNum switch
+                {
+                    0 => blockRoll % 2 == 0 ? 2 : 3,
+                    1 => blockRoll % 2 == 0 ? 3 : 2,
+                    2 => blockRoll % 2 == 0 ? 3 : 2,
+                    3 => blockRoll % 2 == 0 ? 2 : 3,
+                    4 => blockRoll % 2 == 0 ? 3 : 2,
+                    5 => blockRoll % 2 == 0 ? 4 : 1,
+                    6 => 2,
+                    _ => -1,
+                };
+                _blockPos = new Vector3Int[4];
+
+                for (int z = center.z - checkCount; z <= center.z + checkCount; z++)
+                {
+                    for (int y = center.y - checkCount; y <= center.y + checkCount; y++)
+                    {
+                        for (int x = center.x - checkCount; x <= center.y + checkCount; x++)
+                        {
+                            if (checkInBound(x, y, z) && (posArray[x, y, z] == 1 || posArray[x, y, z] == 2) && posArray[x, y, z + 1] == 0)
+                            {
+                                _blockPos[clearCount] = new Vector3Int(x, y, z);
+                                clearCount++;
+                            }
+                        }
+                    }
+                }
+                break;
+
+            case "right":
+                checkCount = blockNum switch
+                {
+                    0 => blockRoll % 2 == 0 ? 2 : 3,
+                    1 => blockRoll % 2 == 0 ? 3 : 2,
+                    2 => blockRoll % 2 == 0 ? 3 : 2,
+                    3 => blockRoll % 2 == 0 ? 2 : 3,
+                    4 => blockRoll % 2 == 0 ? 3 : 2,
+                    5 => blockRoll % 2 == 0 ? 4 : 1,
+                    6 => 2,
+                    _ => -1,
+                };
+                _blockPos = new Vector3Int[checkCount];
+
+                for (int z = center.z - checkCount; z <= center.z + checkCount; z++)
+                {
+                    for (int y = center.y - checkCount; y <= center.y + checkCount; y++)
+                    {
+                        for (int x = center.x + checkCount; x >= center.y - checkCount; x--)
+                        {
+                            if (checkInBound(x, y, z) && (posArray[x, y, z] == 1 || posArray[x, y, z] == 2) && posArray[x, y, z + 1] == 0)
+                            {
+                                _blockPos[clearCount] = new Vector3Int(x, y, z);
+                                clearCount++;
+                            }
+                        }
+                    }
+                }
+                break;
+        }
+
+        if (clearCount == checkCount)
+        {
+            for (int i = 0; i < checkCount; i++)
+            {
+                Vector3Int hoge = _blockPos[i];
+                Vector3Int _vec = hoge;
+                _vec.x += dir switch
+                {
+                    "right" => 1,
+                    "left" => -1,
+                    _ => 0,
+                };
+                _vec.z += dir switch
+                {
+                    "front" => 1,
+                    "back" => -1,
+                    _ => 0,
+                };
+
+                Vector3 huga = Block[i].transform.position;
+                Vector3 _blockvec = huga;
+                _blockvec.x += dir switch
+                {
+                    "right" => 1,
+                    "left" => -1,
+                    _ => 0,
+                };
+                _blockvec.z += dir switch
+                {
+                    "front" => 1,
+                    "back" => -1,
+                    _ => 0,
+                };
+                posArray[_vec.x, _vec.y, _vec.z] = posArray[hoge.x, hoge.y, hoge.z];
+                Block[i].transform.position = _blockvec;
+            }
+        }
     }
 
     Vector3Int getCenterPos()
